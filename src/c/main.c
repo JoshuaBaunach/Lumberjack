@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <time.h>
+#include <math.h>
 
 static Window *s_main_window;//points to a window variable to be accessed as needed
 
@@ -22,11 +23,11 @@ static BitmapLayer *vote_layer_2;
 static BitmapLayer *vote_layer_3;
 static BitmapLayer *snoo_layer;
 
-static AppTimer* moveTimer;
-int allowedTime=1000;
-
 int points = 0;
 char* points_char;
+
+static AppTimer* moveTimer;
+static int allowedTime;
 
 int order_3, order_2, order_1; // Vars for the third, second, and first closest move to the player.
 int time_to_change; // Amount of votes to go through before changing direction (varies from 1 to 6)
@@ -318,7 +319,7 @@ static void main_window_load(Window *window) {
   srand(time(NULL));
   time_to_change = rand() % 7;
   moveTimer = app_timer_register(10000,NULL,NULL);
-  
+  allowedTime = ( (int) 10000 * (pow(2.71828,-0.04 * points) +.5));
 }
 
 static void main_window_unload(Window *window) {
