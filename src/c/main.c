@@ -1,3 +1,8 @@
+/*
+Joshua Baunach and Samuel Newton
+SmallMaths.c from github.com/editdb/Pebble-Math
+*/
+
 #include <pebble.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -70,7 +75,7 @@ void waitFor (int secs) {
 }
 
 // Change the snoo's position
-void move_snoo(Window *window, bool lose)
+void move_snoo(Window *window)
 {
   Layer *window_layer = window_get_root_layer(window);
   GRect bounds = layer_get_bounds(window_layer);
@@ -215,7 +220,7 @@ void up_single_click_handler(ClickRecognizerRef recognizer, void *context) {
     timerTime = app_timer_register(100,timer_callback,NULL);
     points++;
     points_char = itoa(points, 10);
-    move_snoo(window, 0);
+    move_snoo(window);
     shift_moves();
     text_layer_set_text(lower_text_layer, "");
     text_layer_set_text(points_text_layer,points_char);
@@ -252,7 +257,7 @@ void down_single_click_handler(ClickRecognizerRef recognizer, void *context) {
     timerTime = app_timer_register(100,timer_callback,NULL);
     points++;
     points_char = itoa(points, 10);
-    move_snoo(window, 1);
+    move_snoo(window);
     shift_moves();
     text_layer_set_text(lower_text_layer, "");
     text_layer_set_text(points_text_layer,points_char);
