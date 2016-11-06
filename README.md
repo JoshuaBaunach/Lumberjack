@@ -1,2 +1,2 @@
 # Lumberjack
-Reddit-themed implementation of Telegram game Lumberjack on Pebble
+Game developed for Pebble during Hack The Hill 2016
