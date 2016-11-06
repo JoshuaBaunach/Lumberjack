@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <time.h>
 #include <math.h>
+#include "SmallMaths.h"
 
 static Window *s_main_window;//points to a window variable to be accessed as needed
 
@@ -23,7 +24,7 @@ static BitmapLayer *vote_layer_2;
 static BitmapLayer *vote_layer_3;
 static BitmapLayer *snoo_layer;
 
-int points = 0;
+int points = 100;
 char* points_char;
 
 static AppTimer* moveTimer;
@@ -183,6 +184,7 @@ void up_single_click_handler(ClickRecognizerRef recognizer, void *context) {
   if (order_1 == 1)
   {
     app_timer_cancel(moveTimer);
+    allowedTime = ((int) (10000 * sm_exp(-0.04 * points) +.5));
     points++;
     points_char = itoa(points, 10);
     move_snoo(window, 0);
@@ -212,6 +214,7 @@ void down_single_click_handler(ClickRecognizerRef recognizer, void *context) {
   if (order_1 == 0)
   {
     app_timer_cancel(moveTimer);
+    allowedTime = ((int) (10000 * sm_exp(-0.04 * points) +.5));
     points++;
     points_char = itoa(points, 10);
     move_snoo(window, 1);
@@ -319,7 +322,7 @@ static void main_window_load(Window *window) {
   srand(time(NULL));
   time_to_change = rand() % 7;
   moveTimer = app_timer_register(10000,NULL,NULL);
-  allowedTime = ( (int) 10000 * (pow(2.71828,-0.04 * points) +.5));
+  allowedTime = ((int) (10000 * sm_exp(-0.04 * points) +.5));
 }
 
 static void main_window_unload(Window *window) {
