@@ -11,20 +11,8 @@
         "resources": {
             "media": [
                 {
-                    "file": "images/snoo_sad_down.bmp",
-                    "name": "SNOO_SAD_DOWN",
-                    "targetPlatforms": null,
-                    "type": "bitmap"
-                },
-                {
-                    "file": "images/snoo_happy_down.bmp",
-                    "name": "SNOO_HAPPY_DOWN",
-                    "targetPlatforms": null,
-                    "type": "bitmap"
-                },
-                {
-                    "file": "images/snoo_happy_up.bmp",
-                    "name": "SNOO_HAPPY_UP",
+                    "file": "images/upvote.bmp",
+                    "name": "UPVOTE",
                     "targetPlatforms": null,
                     "type": "bitmap"
                 },
@@ -35,20 +23,32 @@
                     "type": "bitmap"
                 },
                 {
-                    "file": "images/downvote.bmp",
-                    "name": "DOWNVOTE",
+                    "file": "images/snoo_sad_down.bmp",
+                    "name": "SNOO_SAD_DOWN",
                     "targetPlatforms": null,
                     "type": "bitmap"
                 },
                 {
-                    "file": "images/upvote.bmp",
-                    "name": "UPVOTE",
+                    "file": "images/snoo_happy_up.bmp",
+                    "name": "SNOO_HAPPY_UP",
+                    "targetPlatforms": null,
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/snoo_happy_down.bmp",
+                    "name": "SNOO_HAPPY_DOWN",
                     "targetPlatforms": null,
                     "type": "bitmap"
                 },
                 {
                     "file": "images/neck.bmp",
                     "name": "NECK",
+                    "targetPlatforms": null,
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/downvote.bmp",
+                    "name": "DOWNVOTE",
                     "targetPlatforms": null,
                     "type": "bitmap"
                 }

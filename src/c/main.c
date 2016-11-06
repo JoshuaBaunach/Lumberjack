@@ -22,6 +22,9 @@ static BitmapLayer *vote_layer_2;
 static BitmapLayer *vote_layer_3;
 static BitmapLayer *snoo_layer;
 
+static AppTimer* moveTimer;
+int allowedTime=1000;
+
 int points = 0;
 char* points_char;
 
@@ -161,16 +164,31 @@ void refresh_window(Window *window)
    window_stack_push(window, true);
 }
 
+void callback(void *data) {
+  vibes_short_pulse();
+  waitFor(1);
+  text_layer_set_text(lower_text_layer,"Game Over! Press UP to begin a new game.");
+  points = 0;
+  current_direction = 1;
+  order_1 = 1;
+  order_2 = 1;
+  order_3 = 1;
+  srand(time(NULL));
+  time_to_change = rand() % 7;
+}
+
 void up_single_click_handler(ClickRecognizerRef recognizer, void *context) {
   Window *window = (Window *)context;
   if (order_1 == 1)
   {
+    app_timer_cancel(moveTimer);
     points++;
     points_char = itoa(points, 10);
     move_snoo(window, 0);
     shift_moves();
     text_layer_set_text(lower_text_layer, "");
     text_layer_set_text(points_text_layer,points_char);
+    moveTimer = app_timer_register(allowedTime, callback, NULL);
     refresh_window(window);
   }
   else
@@ -192,12 +210,14 @@ void down_single_click_handler(ClickRecognizerRef recognizer, void *context) {
   Window *window = (Window *)context;
   if (order_1 == 0)
   {
+    app_timer_cancel(moveTimer);
     points++;
     points_char = itoa(points, 10);
     move_snoo(window, 1);
     shift_moves();
     text_layer_set_text(lower_text_layer, "");
     text_layer_set_text(points_text_layer,points_char);
+    moveTimer = app_timer_register(allowedTime, callback, NULL);
     refresh_window(window);
   }
   else
@@ -297,6 +317,7 @@ static void main_window_load(Window *window) {
   order_3 = 1;
   srand(time(NULL));
   time_to_change = rand() % 7;
+  moveTimer = app_timer_register(10000,NULL,NULL);
   
 }
 
