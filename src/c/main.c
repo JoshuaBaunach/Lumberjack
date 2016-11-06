@@ -11,16 +11,23 @@ static TextLayer *points_text_layer;
 static GBitmap *neck;
 static GBitmap *upvote;
 static GBitmap *downvote;
+static GBitmap *snoo_happy_up;
+static GBitmap *snoo_happy_down;
+static GBitmap *snoo_sad_up;
+static GBitmap *snoo_sad_down;
 
 static BitmapLayer *neck_layer;
 static BitmapLayer *vote_layer_1;
 static BitmapLayer *vote_layer_2;
 static BitmapLayer *vote_layer_3;
+static BitmapLayer *snoo_layer;
 
 int points = 0;
 char* points_char;
 
 int order_3, order_2, order_1; // Vars for the third, second, and first closest move to the player.
+int time_to_change; // Amount of votes to go through before changing direction (varies from 1 to 6)
+int current_direction;
 
 // Converts integer to c string
 char* itoa(int val, int base){
@@ -36,7 +43,14 @@ void shift_moves()
 {
   order_1 = order_2;
   order_2 = order_3;
-  srand(time(NULL));
+  if (time_to_change != 0) order_3 = current_direction;
+  else
+  {
+    srand(time(NULL));
+    time_to_change = rand() % 7;
+    
+    order_3 = current_direction;
+  }
   order_3 = rand() % 2;
 }
 
@@ -44,6 +58,35 @@ void shift_moves()
 void waitFor (int secs) {
     int retTime = time(0) + secs;   // Get finishing time.
     while (time(0) < retTime);               // Loop until it arrives.
+}
+
+// Change the snoo's position
+void move_snoo(Window *window, bool lose)
+{
+  Layer *window_layer = window_get_root_layer(window);
+  GRect bounds = layer_get_bounds(window_layer);
+  
+  if (snoo_layer!=NULL) 
+  {
+    bitmap_layer_destroy(snoo_layer);
+    snoo_layer = NULL;
+  }
+  
+  // Change position
+  if (order_1 == 0) // If Snoo is moving down to avoid an upvote (why)
+  {
+    snoo_layer = bitmap_layer_create(GRect((bounds.size.w/2)+40,(bounds.size.h/2)+10, 20, 20));
+    bitmap_layer_set_compositing_mode(snoo_layer, GCompOpSet);
+    bitmap_layer_set_bitmap(snoo_layer, snoo_happy_down);
+    layer_add_child(window_layer, bitmap_layer_get_layer(snoo_layer));
+  }
+  if (order_1 == 1) // If Snoo is moving up to avoid a downvote
+  {
+    snoo_layer = bitmap_layer_create(GRect((bounds.size.w/2)+40,(bounds.size.h/2)-30, 20, 20));
+    bitmap_layer_set_compositing_mode(snoo_layer, GCompOpSet);
+    bitmap_layer_set_bitmap(snoo_layer, snoo_happy_up);
+    layer_add_child(window_layer, bitmap_layer_get_layer(snoo_layer));
+  }
 }
 
 void refresh_window(Window *window)
@@ -124,6 +167,7 @@ void up_single_click_handler(ClickRecognizerRef recognizer, void *context) {
   {
     points++;
     points_char = itoa(points, 10);
+    move_snoo(window, 0);
     shift_moves();
     text_layer_set_text(lower_text_layer, "");
     text_layer_set_text(points_text_layer,points_char);
@@ -135,11 +179,12 @@ void up_single_click_handler(ClickRecognizerRef recognizer, void *context) {
     waitFor(1);
     text_layer_set_text(lower_text_layer,"Game Over! Press UP to begin a new game.");
     points = 0;
+    current_direction = 1;
     order_1 = 1;
+    order_2 = 1;
+    order_3 = 1;
     srand(time(NULL));
-    order_2 = rand() % 2;
-    srand(time(NULL));
-    order_3 = rand() % 2;
+    time_to_change = rand() % 7;
   }
 }
 
@@ -149,6 +194,7 @@ void down_single_click_handler(ClickRecognizerRef recognizer, void *context) {
   {
     points++;
     points_char = itoa(points, 10);
+    move_snoo(window, 1);
     shift_moves();
     text_layer_set_text(lower_text_layer, "");
     text_layer_set_text(points_text_layer,points_char);
@@ -160,11 +206,12 @@ void down_single_click_handler(ClickRecognizerRef recognizer, void *context) {
     waitFor(1);
     text_layer_set_text(lower_text_layer,"Game Over! Press UP to begin a new game.");
     points = 0;
+    current_direction = 1;
     order_1 = 1;
+    order_2 = 1;
+    order_3 = 1;
     srand(time(NULL));
-    order_2 = rand() % 2;
-    srand(time(NULL));
-    order_3 = rand() % 2;
+    time_to_change = rand() % 7;
   }
 }
 
@@ -209,6 +256,10 @@ static void main_window_load(Window *window) {
   neck = gbitmap_create_with_resource(RESOURCE_ID_NECK);
   upvote = gbitmap_create_with_resource(RESOURCE_ID_UPVOTE);
   downvote = gbitmap_create_with_resource(RESOURCE_ID_DOWNVOTE);
+  snoo_happy_up = gbitmap_create_with_resource(RESOURCE_ID_SNOO_HAPPY_UP);
+  snoo_happy_down = gbitmap_create_with_resource(RESOURCE_ID_SNOO_HAPPY_DOWN);
+  snoo_sad_up = gbitmap_create_with_resource(RESOURCE_ID_SNOO_SAD_UP);
+  snoo_sad_down = gbitmap_create_with_resource(RESOURCE_ID_SNOO_SAD_DOWN);
   /*
   Old Code
   // Set aside rectangles for the neck bitmap
@@ -234,11 +285,18 @@ static void main_window_load(Window *window) {
   bitmap_layer_set_bitmap(neck_layer, neck);
   layer_add_child(window_get_root_layer(window), bitmap_layer_get_layer(neck_layer));
   
+  // Add initial snoo to layer
+  snoo_layer = bitmap_layer_create(GRect((bounds.size.w/2)+40,(bounds.size.h/2)-30, 20, 20));
+  bitmap_layer_set_compositing_mode(snoo_layer, GCompOpSet);
+  bitmap_layer_set_bitmap(snoo_layer, snoo_happy_up);
+  layer_add_child(window_layer, bitmap_layer_get_layer(snoo_layer));
+  
+  current_direction = 1;
   order_1 = 1;
+  order_2 = 1;
+  order_3 = 1;
   srand(time(NULL));
-  order_2 = rand() % 2;
-  srand(time(NULL));
-  order_3 = rand() % 2;
+  time_to_change = rand() % 7;
   
 }
 
@@ -256,6 +314,8 @@ static void main_window_unload(Window *window) {
   bitmap_layer_destroy(vote_layer_3);
   bitmap_layer_destroy(vote_layer_2);
   bitmap_layer_destroy(vote_layer_1);
+  
+  bitmap_layer_destroy(snoo_layer);
 }
 
 static void init() {
