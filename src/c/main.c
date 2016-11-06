@@ -7,6 +7,8 @@
 
 static Window *s_main_window;//points to a window variable to be accessed as needed
 
+static Layer *s_canvas_layer;
+
 static TextLayer *lower_text_layer;
 static TextLayer *points_text_layer;
 
@@ -24,15 +26,17 @@ static BitmapLayer *vote_layer_2;
 static BitmapLayer *vote_layer_3;
 static BitmapLayer *snoo_layer;
 
-int points = 100;
+int points = 0;
 char* points_char;
 
 static AppTimer* moveTimer;
+static AppTimer* timerTime;
 static int allowedTime;
 
 int order_3, order_2, order_1; // Vars for the third, second, and first closest move to the player.
 int time_to_change; // Amount of votes to go through before changing direction (varies from 1 to 6)
 int current_direction;
+bool out_of_time;
 
 // Converts integer to c string
 char* itoa(int val, int base){
@@ -167,7 +171,9 @@ void refresh_window(Window *window)
 }
 
 void callback(void *data) {
+  app_timer_cancel(timerTime);
   vibes_short_pulse();
+  out_of_time = true;
   waitFor(1);
   text_layer_set_text(lower_text_layer,"Game Over! Press UP to begin a new game.");
   points = 0;
@@ -179,12 +185,34 @@ void callback(void *data) {
   time_to_change = rand() % 7;
 }
 
+void timer_callback(void *data)
+{
+  layer_mark_dirty(s_canvas_layer);
+  allowedTime-=100;
+  timerTime = app_timer_register(100,timer_callback,NULL);
+}
+
+static void canvas_update_proc(Layer *layer, GContext *ctx) {
+  GRect bounds = layer_get_bounds(layer);
+  
+  // Set rectangle bounds
+  GRect rect_bounds = GRect(0, (bounds.size.h/2) + 50, allowedTime/100, 20);
+
+  // Draw a rectangle
+  graphics_draw_rect(ctx, rect_bounds);
+}
+
 void up_single_click_handler(ClickRecognizerRef recognizer, void *context) {
   Window *window = (Window *)context;
+  
   if (order_1 == 1)
   {
+    app_timer_cancel(timerTime);
+    out_of_time = false;
     app_timer_cancel(moveTimer);
-    allowedTime = ((int) (10000 * sm_exp(-0.04 * points) +.5));
+    allowedTime = ((int) (10000 * sm_exp(-0.03 * points) +.5));
+    if (allowedTime < 500) allowedTime = 500;
+    timerTime = app_timer_register(100,timer_callback,NULL);
     points++;
     points_char = itoa(points, 10);
     move_snoo(window, 0);
@@ -196,7 +224,10 @@ void up_single_click_handler(ClickRecognizerRef recognizer, void *context) {
   }
   else
   {
+    app_timer_cancel(moveTimer);
+    app_timer_cancel(timerTime);
     vibes_short_pulse();
+    out_of_time = true;
     waitFor(1);
     text_layer_set_text(lower_text_layer,"Game Over! Press UP to begin a new game.");
     points = 0;
@@ -213,8 +244,12 @@ void down_single_click_handler(ClickRecognizerRef recognizer, void *context) {
   Window *window = (Window *)context;
   if (order_1 == 0)
   {
+    app_timer_cancel(timerTime);
+    out_of_time = false;
     app_timer_cancel(moveTimer);
-    allowedTime = ((int) (10000 * sm_exp(-0.04 * points) +.5));
+    allowedTime = ((int) (10000 * sm_exp(-0.03 * points) +.5));
+    if (allowedTime < 500) allowedTime = 500;
+    timerTime = app_timer_register(100,timer_callback,NULL);
     points++;
     points_char = itoa(points, 10);
     move_snoo(window, 1);
@@ -226,7 +261,10 @@ void down_single_click_handler(ClickRecognizerRef recognizer, void *context) {
   }
   else
   {
+    app_timer_cancel(moveTimer);
+    app_timer_cancel(timerTime);
     vibes_short_pulse();
+    out_of_time = true;
     waitFor(1);
     text_layer_set_text(lower_text_layer,"Game Over! Press UP to begin a new game.");
     points = 0;
@@ -255,6 +293,15 @@ static void main_window_load(Window *window) {
       GRect(0, 120, bounds.size.w, 50));
   points_text_layer = text_layer_create(
       GRect(0, 0, bounds.size.w, 20));
+  
+  // Create canvas layer
+  s_canvas_layer = layer_create(bounds);
+  
+  // Assign the custom drawing procedure
+  layer_set_update_proc(s_canvas_layer, canvas_update_proc);
+  
+  // Add to Window
+  layer_add_child(window_get_root_layer(window), s_canvas_layer);
 
   // Lower Text Layer
   text_layer_set_background_color(lower_text_layer, GColorClear);
@@ -322,7 +369,8 @@ static void main_window_load(Window *window) {
   srand(time(NULL));
   time_to_change = rand() % 7;
   moveTimer = app_timer_register(10000,NULL,NULL);
-  allowedTime = ((int) (10000 * sm_exp(-0.04 * points) +.5));
+  allowedTime = ((int) (10000 * sm_exp(-0.03 * points) +.5));
+  out_of_time = false;
 }
 
 static void main_window_unload(Window *window) {
